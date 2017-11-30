@@ -17,9 +17,8 @@ public class WP {
 //        JUMLAH_KRITERIA = inputs.nextInt();
 //         dummy data
         JUMLAH_KRITERIA = 4;
-        /*
-         * [
-         * Nama Kriteria : bobot ]
+        /** DAFTAR KRITERIA...
+         * Nama Kriteria :: nilai bobot :: kategori Benefit/Cost]
          */
         String daftarKriteria[][] = new String[JUMLAH_KRITERIA][3];
         // dummy data:
@@ -53,10 +52,17 @@ public class WP {
 //        }
         System.out.println("==============================================");
         //------------------------------------------------------------------
-        System.out.print("Masukkan jumlah alternatif: ");
+//        System.out.print("Masukkan jumlah alternatif: ");
 //        int JUMLAH_ALTERNATIF = inputs.nextInt();
         int JUMLAH_ALTERNATIF = 3;
-        String alternatif[][] = new String[JUMLAH_ALTERNATIF][JUMLAH_KRITERIA + 1];
+        
+        /** DAFTAR ALTERNATIF..
+         * [0] -> nama alternatif
+         * [1 - n-2] -> nilai bobot / nilai referensi
+         * [n-1] -> menampung hasil perhitungan nilai preferensi
+         */
+        
+        String alternatif[][] = new String[JUMLAH_ALTERNATIF][JUMLAH_KRITERIA + 2];
 //        //dummy data:
         alternatif[0][0] = "cv. surya bahagia";
         alternatif[0][1] = "66";
@@ -81,7 +87,7 @@ public class WP {
 //            System.out.print("Nama Alternatif:");
 //            alternatif[i][0] = inputs.next();
 //            inputs.nextLine();
-//            for (int j = 1; j < alternatif[i].length; j++) {
+//            for (int j = 1; j < alternatif[i].length-1; j++) {
 //                System.out.printf("C%d : ", j);
 //                alternatif[i][j] = inputs.next();
 //                inputs.nextLine();
@@ -89,16 +95,28 @@ public class WP {
 //            System.out.println("------------------");
 //        }
 
-        putuskanWP(daftarKriteria, alternatif);
+        hitungWP(daftarKriteria, alternatif);
     }
 
-    private static void putuskanWP(String[][] daftarKriteria, String[][] alternatif) {
+    private static void hitungWP(String[][] daftarKriteria, String[][] alternatif) {
+        // urutan awal yang diberikan user:
+        for (int i = 0; i < alternatif.length; i++) {
+            System.out.printf("Urutan%d : ", i + 1);
+            System.out.println(alternatif[i][0]);
+        }
+        System.out.println("=============================");
+        
+        //normalisasikan daftar bobot kriteria
+        
         double normalisasi[] = normalisasiW(daftarKriteria);
         System.out.println("hasil normalisasi: ");
         for (int i = 0; i < normalisasi.length; i++) {
             System.out.printf("W%d : ", i + 1);
             System.out.println(normalisasi[i]);
         }
+        
+        //hitung vektor S dari alternatif solusi yang diberikan
+        
         double vektorS[] = hitungVektorS(daftarKriteria,alternatif,normalisasi);
         System.out.println("hasil VektorS: ");
         for (int i = 0; i < vektorS.length; i++) {
@@ -106,18 +124,21 @@ public class WP {
             System.out.println(vektorS[i]);
         }
         System.out.println("===========================");
-//        double totalVektorS = hitungTotalVektorS(vektorS);
-//        System.out.println("total VektorS: "+totalVektorS);
-        double preferensi[] = hitungPreferensi(vektorS);
+
+        // hitung nilai preferensi dari vektor S tiap alternatif 
+        
+        double preferensi[] = hitungPreferensi(vektorS,alternatif);
         for (int i = 0; i < preferensi.length; i++) {
             System.out.printf("V%d : ", i + 1);
             System.out.println(preferensi[i]);
         }
         System.out.println("===========================");
-        urutkan(preferensi,alternatif);
-        for (int i = 0; i < preferensi.length; i++) {
-            System.out.printf("V%d : ", i + 1);
-            System.out.println(preferensi[i]);
+        
+        // mengurutkan alternatif berdasarkan nilai preferensi
+        
+        urutkan(alternatif);
+        for (int i = 0; i < alternatif.length; i++) {
+            System.out.printf("Urutan %d : %s \t%s \n", i + 1,alternatif[i][0],alternatif[i][alternatif[i].length-1]);
         }
     }
 
@@ -143,7 +164,7 @@ public class WP {
             double hasilSi = 0;
             double hasilPerAlternatif = 1;
 //            System.out.println("alternatif ke: "+i);
-            for (int j = 1; j < alternatif[i].length; j++) { // 1 - 4
+            for (int j = 1; j < alternatif[i].length-1; j++) { // 1 - 4
                 // kalau cost normalisasi negatif (untuk pangkat)
                 if (daftarKriteria[j-1][2].compareToIgnoreCase("c") == 0) {
 //                    System.out.printf("cost! %d %d\n",i,j);
@@ -162,11 +183,12 @@ public class WP {
         return hasil;
     }
 
-    private static double[] hitungPreferensi(double[] vektorS) {
+    private static double[] hitungPreferensi(double[] vektorS,String[][] alternatif) {
         double total = hitungTotalVektorS(vektorS);
         double hasil[] = new double[vektorS.length];
         for (int i = 0; i < vektorS.length; i++) {
             hasil[i]=vektorS[i]/total;
+            alternatif[i][alternatif[i].length-1] = String.valueOf(hasil[i]);
         }
         return hasil;
     }
@@ -179,19 +201,19 @@ public class WP {
         return total;
     }
     
-    private static void urutkan(double[] preferensi,String[][] alternatif) {
+    private static void urutkan(String[][] alternatif) {
         // selection sorting
-        for (int i = 0; i < preferensi.length-1; i++) {
+        for (int i = 0; i < alternatif.length-1; i++) {
             int min_index = i;
-            for (int j = i+1; j < preferensi.length; j++) {
-                if (preferensi[j] > preferensi[min_index]) {
+            for (int j = i+1; j < alternatif.length; j++) {
+                if (Double.parseDouble(alternatif[j][alternatif[j].length-1]) > Double.parseDouble(alternatif[min_index][alternatif[j].length-1])) {
                     min_index = j;
                 }
             }
             // swap:
-            double tmp = preferensi[min_index];
-            preferensi[min_index] = preferensi[i];
-            preferensi[i] = tmp;   
+            String[] tmp = alternatif[min_index];
+            alternatif[min_index] = alternatif[i];
+            alternatif[i] = tmp;   
         }
     }
 
